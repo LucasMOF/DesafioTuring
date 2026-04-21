@@ -48,3 +48,7 @@ O sistema baseia-se em uma entidade principal:
 3. Execute a aplicação através do Maven:
    ```bash
    mvn spring-boot:run
+4. Acesse a interface pelo navegador no endereço:
+   ```bash
+   http://localhost:8080
+
