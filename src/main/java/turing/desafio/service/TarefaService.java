@@ -5,8 +5,10 @@ import org.springframework.stereotype.Service;
 import turing.desafio.model.Tarefa;
 import turing.desafio.model.dto.RequestTarefaDTO;
 import turing.desafio.model.dto.ResponseTarefaDTO;
+import turing.desafio.model.dto.UpdateTarefaDTO;
 import turing.desafio.repository.TarefaRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -20,7 +22,7 @@ public class TarefaService {
         tarefa.setTitulo(dto.titulo());
         tarefa.setDescricao(dto.descricao());
         tarefa.setConcluido(dto.concluido());
-        tarefa.setData(dto.data());
+        tarefa.setData(LocalDate.now());
 
         repository.save(tarefa);
         return tarefa;
@@ -43,6 +45,18 @@ public class TarefaService {
 
         tarefa.setConcluido(!tarefa.isConcluido());
         return repository.save(tarefa);
+    }
+
+    public Tarefa atualizarTarefa(Long id, UpdateTarefaDTO dto){
+        Tarefa tarefa = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada, id inválido!"));
+
+        tarefa.setTitulo(dto.titulo());
+        tarefa.setDescricao(dto.descricao());
+        tarefa.setConcluido(dto.concluido());
+
+        repository.save(tarefa);
+        return tarefa;
     }
 
     public Tarefa deletarTarefa(Long id) {
