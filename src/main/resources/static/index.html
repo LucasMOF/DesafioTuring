@@ -4,54 +4,92 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciador de Tarefas</title>
+
     <style>
-        :root {
-            --primary: #0056b3;
-            --success: #28a745;
-            --danger: #dc3545;
-            --bg: #f4f4f9;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
         }
-        body { font-family: Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: var(--primary); margin-top: 0; }
 
-        /* Formulário */
-        .form-group { margin-bottom: 10px; }
-        input[type="text"] { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        .checkbox-group { display: flex; align-items: center; gap: 8px; margin-bottom: 15px; font-size: 14px;}
+        .caixa-principal {
+            max-width: 600px;
+            margin: 0 auto; /* Centraliza a caixa na tela */
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
 
-        button { cursor: pointer; border: none; border-radius: 4px; padding: 10px; font-size: 14px; color: white; transition: 0.2s; }
-        button:hover { opacity: 0.8; }
-        .btn-salvar { background: var(--primary); width: 100%; font-weight: bold; }
-        .btn-editar { background: #6c757d; }
-        .btn-status { background: var(--success); }
-        .btn-excluir { background: var(--danger); }
-        .btn-cancelar { background: #ccc; color: #333; width: 100%; margin-top: 5px; display: none; }
+        h2 { text-align: center; color: #0056b3; }
 
-        /* Lista */
-        .lista-tarefas { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .tarefa-item { border: 1px solid #ddd; padding: 15px; border-radius: 6px; display: flex; flex-direction: column; gap: 10px; }
-        .tarefa-item.concluida { background: #f9fff9; border-color: var(--success); opacity: 0.8; }
-        .tarefa-item.concluida h4 { text-decoration: line-through; color: #666; }
-        .tarefa-info h4 { margin: 0 0 5px 0; }
-        .tarefa-info p { margin: 0; font-size: 14px; color: #555; }
-        .tarefa-info small { display: block; margin-top: 6px; font-size: 12px; color: #888; }
-        .botoes { display: flex; gap: 5px; flex-wrap: wrap; }
+        /* Estilos dos campos de digitar */
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 10px; /* Dá um espaço em baixo do campo */
+        }
+
+        /* Estilos da caixa de marcar (checkbox) */
+        .area-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        /* Estilos genéricos para todos os botões */
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            padding: 10px;
+            color: white;
+        }
+
+        /* Cores específicas de cada botão */
+        .btn-salvar { background-color: #0056b3; width: 100%; font-weight: bold; }
+        .btn-editar { background-color: #6c757d; }
+        .btn-status { background-color: #28a745; }
+        .btn-excluir { background-color: #dc3545; }
+        .btn-cancelar { background-color: #ccc; color: #333; width: 100%; margin-top: 5px; display: none; }
+
+        /* Estilos da lista de tarefas */
+        .tarefa-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        /* Estilo aplicado APENAS quando a tarefa está concluída */
+        .concluida {
+            background-color: #f9fff9;
+            border-color: #28a745;
+        }
+
+        /* Risca o título da tarefa se ela estiver concluída */
+        .concluida h4 { text-decoration: line-through; color: #666; }
+
+        .botoes { margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="caixa-principal">
     <h2>Gerenciador de Tarefas</h2>
 
     <input type="hidden" id="tarefaId">
-    <div class="form-group">
-        <input type="text" id="titulo" placeholder="Título da tarefa" required>
-    </div>
-    <div class="form-group">
-        <input type="text" id="descricao" placeholder="Descrição" required>
-    </div>
-    <div class="checkbox-group">
+
+    <input type="text" id="titulo" placeholder="Título da tarefa">
+    <input type="text" id="descricao" placeholder="Descrição da tarefa">
+
+    <div class="area-checkbox">
         <input type="checkbox" id="concluido">
         <label for="concluido">Marcar como concluída</label>
     </div>
@@ -59,100 +97,147 @@
     <button class="btn-salvar" id="btnSalvar" onclick="salvarTarefa()">Salvar Tarefa</button>
     <button class="btn-cancelar" id="btnCancelar" onclick="limparFormulario()">Cancelar Edição</button>
 
-    <div id="listaTarefas" class="lista-tarefas"></div>
+    <div id="listaTarefas"></div>
 </div>
 
 <script>
+    // A rota do seu Controller no Spring Boot
     const API_URL = '/tarefa';
 
+    // Função READ: Pega a lista do Java e mostra na tela
     async function carregarTarefas() {
-        const res = await fetch(API_URL);
-        const tarefas = await res.json();
+        // Faz um GET na sua API
+        const resposta = await fetch(API_URL);
+        const tarefas = await resposta.json(); // Converte a resposta para JSON
+
+        // Pega a Div vazia do HTML onde vamos colocar as tarefas
         const divLista = document.getElementById('listaTarefas');
-        divLista.innerHTML = '';
+        divLista.innerHTML = ''; // Limpa a lista antes de desenhar de novo
 
-        tarefas.forEach(t => {
-            // Formata a data (de YYYY-MM-DD para DD/MM/YYYY)
-            const dataFormatada = t.data ? t.data.split('-').reverse().join('/') : 'Sem data';
+        // Faz um "for" em cada tarefa que veio do Java
+        for (let i = 0; i < tarefas.length; i++) {
+            let tarefa = tarefas[i];
 
-            divLista.innerHTML += `
-                <div class="tarefa-item ${t.concluido ? 'concluida' : ''}">
-                    <div class="tarefa-info">
-                        <h4>${t.titulo}</h4>
-                        <p>${t.descricao}</p>
-                        <small>Criado em: ${dataFormatada}</small>
-                    </div>
+            // 1. Tratamento da Data de forma simples (YYYY-MM-DD -> DD/MM/YYYY)
+            let dataFormatada = "Sem data";
+            if (tarefa.data !== null && tarefa.data !== undefined) {
+                let partesData = tarefa.data.split('-'); // Corta a data nos tracinhos
+                dataFormatada = partesData[2] + '/' + partesData[1] + '/' + partesData[0];
+            }
+
+            // 2. Definir visual se está concluída ou não
+            let classeCss = "";
+            let textoBotao = "Concluir";
+            if (tarefa.concluido === true) {
+                classeCss = "concluida";
+                textoBotao = "Reabrir";
+            }
+
+            // 3. Monta o bloco de HTML para essa tarefa e junta na tela
+            divLista.innerHTML = divLista.innerHTML + `
+                <div class="tarefa-item ${classeCss}">
+                    <h4>${tarefa.titulo}</h4>
+                    <p>${tarefa.descricao}</p>
+                    <p style="font-size: 12px; color: #888;">Data: ${dataFormatada}</p>
+
                     <div class="botoes">
-                        <button class="btn-status" onclick="alternarStatus(${t.id})">
-                            ${t.concluido ? 'Reabrir' : 'Concluir'}
-                        </button>
-                        <button class="btn-editar" onclick="prepararEdicao(${t.id}, '${t.titulo}', '${t.descricao}', ${t.concluido})">
-                            Editar
-                        </button>
-                        <button class="btn-excluir" onclick="deletarTarefa(${t.id})">
-                            Excluir
-                        </button>
+                        <button class="btn-status" onclick="alternarStatus(${tarefa.id})">${textoBotao}</button>
+                        <button class="btn-editar" onclick="prepararEdicao(${tarefa.id}, '${tarefa.titulo}', '${tarefa.descricao}', ${tarefa.concluido})">Editar</button>
+                        <button class="btn-excluir" onclick="deletarTarefa(${tarefa.id})">Excluir</button>
                     </div>
                 </div>
             `;
-        });
+        }
     }
 
+    // Função CREATE / UPDATE: Salva os dados do formulário no Java
     async function salvarTarefa() {
-        const id = document.getElementById('tarefaId').value;
-        const titulo = document.getElementById('titulo').value;
-        const descricao = document.getElementById('descricao').value;
-        const concluido = document.getElementById('concluido').checked;
+        // Pega os valores que o usuário digitou nas caixinhas
+        let idDigitado = document.getElementById('tarefaId').value;
+        let tituloDigitado = document.getElementById('titulo').value;
+        let descricaoDigitada = document.getElementById('descricao').value;
+        let estaMarcado = document.getElementById('concluido').checked;
 
-        if(!titulo || !descricao) return alert("Preencha título e descrição!");
+        // Validação básica
+        if (tituloDigitado === "" || descricaoDigitada === "") {
+            alert("Preencha título e descrição!");
+            return;
+        }
 
-        const payload = JSON.stringify({ titulo, descricao, concluido });
-        const metodo = id ? 'PUT' : 'POST';
-        const url = id ? `${API_URL}/atualizar/${id}` : API_URL;
+        // Monta o objeto (JSON) idêntico ao seu RequestTarefaDTO/UpdateTarefaDTO no Java
+        let dadosParaOJava = {
+            titulo: tituloDigitado,
+            descricao: descricaoDigitada,
+            concluido: estaMarcado
+        };
 
-        await fetch(url, {
-            method: metodo,
+        // Decide se é um POST (Criar) ou PUT (Atualizar) baseado na existência do ID
+        let metodoHttp = "POST";
+        let urlDaRequisicao = API_URL;
+
+        if (idDigitado !== "") {
+            metodoHttp = "PUT";
+            urlDaRequisicao = API_URL + "/atualizar/" + idDigitado; // Chama seu novo método
+        }
+
+        // Envia para o Spring Boot
+        await fetch(urlDaRequisicao, {
+            method: metodoHttp,
             headers: { 'Content-Type': 'application/json' },
-            body: payload
+            body: JSON.stringify(dadosParaOJava)
         });
 
+        // Limpa o formulário e recarrega a lista
         limparFormulario();
         carregarTarefas();
     }
 
+    // Função auxiliar: Preenche os campos para o usuário conseguir editar
     function prepararEdicao(id, titulo, descricao, concluido) {
         document.getElementById('tarefaId').value = id;
         document.getElementById('titulo').value = titulo;
         document.getElementById('descricao').value = descricao;
         document.getElementById('concluido').checked = concluido;
 
+        // Muda o visual dos botões
         document.getElementById('btnSalvar').innerText = 'Atualizar Tarefa';
         document.getElementById('btnCancelar').style.display = 'block';
     }
 
+    // Função auxiliar: Esvazia todos os campos
     function limparFormulario() {
         document.getElementById('tarefaId').value = '';
         document.getElementById('titulo').value = '';
         document.getElementById('descricao').value = '';
         document.getElementById('concluido').checked = false;
 
+        // Volta o visual padrão dos botões
         document.getElementById('btnSalvar').innerText = 'Salvar Tarefa';
         document.getElementById('btnCancelar').style.display = 'none';
     }
 
+    // Função UPDATE rápida: Chama o método do Java que apenas inverte o status
     async function alternarStatus(id) {
-        await fetch(`${API_URL}/${id}`, { method: 'PUT' });
-        carregarTarefas();
+        await fetch(API_URL + "/" + id, {
+            method: 'PUT'
+        });
+        carregarTarefas(); // Atualiza a tela após mudar
     }
 
+    // Função DELETE: Pede para o Java apagar do banco de dados
     async function deletarTarefa(id) {
-        if(confirm("Excluir esta tarefa?")) {
-            await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-            carregarTarefas();
+        let confirmou = confirm("Deseja mesmo excluir esta tarefa?");
+        if (confirmou === true) {
+            await fetch(API_URL + "/" + id, {
+                method: 'DELETE'
+            });
+            carregarTarefas(); // Atualiza a tela após apagar
         }
     }
 
+    // Quando o arquivo carrega, ele chama essa função para buscar a lista inicial
     carregarTarefas();
 </script>
+
 </body>
 </html>
